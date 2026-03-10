@@ -16,7 +16,7 @@ import (
 //  go run ./cmd/api/ -config ./config/dev.env
 
 func main() {
-	// init config 
+	// init config
 	cfg := config.LoadConfig()
 
 	// init db
@@ -38,6 +38,8 @@ func main() {
 
 	go func() {
 		log.Printf("Server is running: http://%s", cfg.HTTPServer.Address)
+
+		log.Printf("Health Check HTTP: http://%s/api/health-check-http", cfg.HTTPServer.Address)
 
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Failed to run server, err: %v", err)
