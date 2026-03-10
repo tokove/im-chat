@@ -1,0 +1,51 @@
+### 变量定义 (可根据实际部署修改)
+@host = http://localhost:8080
+@contentType = application/json
+
+### 1. 健康检查 (Health Check)
+# 验证服务是否启动
+GET {{host}}/api/health-check-http
+Content-Type: {{contentType}}
+
+### 2. 用户注册 (Register Email) - 成功场景
+# 测试正常的注册流程
+POST {{host}}/api/auth/register-email
+Content-Type: {{contentType}}
+
+{
+  "name": "张三",
+  "email": "zhangsan@example.com",
+  "password": "SecurePassword123!"
+}
+
+### 3. 用户注册 (Register Email) - 重复邮箱测试
+# 运行完上面的请求后，再次运行此请求应返回 409 Conflict
+POST {{host}}/api/auth/register-email
+Content-Type: {{contentType}}
+
+{
+  "name": "张三副本",
+  "email": "zhangsan@example.com",
+  "password": "AnotherPassword123!"
+}
+
+### 4. 用户注册 (Register Email) - 参数缺失测试
+# 测试缺少必填字段，应返回 400 Bad Request
+POST {{host}}/api/auth/register-email
+Content-Type: {{contentType}}
+
+{
+  "name": "李四",
+  "email": "" 
+}
+
+### 5. 用户注册 (Register Email) - JSON 格式错误测试
+# 测试无效的 JSON 结构，应返回 400 Bad Request
+POST {{host}}/api/auth/register-email
+Content-Type: {{contentType}}
+
+{
+  "name": "王五",
+  "email": "wangwu@example.com"
+  "password": "MissingComma" 
+}

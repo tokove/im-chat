@@ -3,6 +3,7 @@ package main
 import (
 	"backend/internal/config"
 	"backend/internal/db"
+	"backend/internal/middleware"
 	"backend/internal/router"
 	"context"
 	"log"
@@ -30,6 +31,7 @@ func main() {
 	}
 
 	r := router.SetupRouter()
+	r.Use(middleware.CorsMiddleware())
 	server.Handler = r
 
 	// shutdown gracefully
@@ -38,8 +40,10 @@ func main() {
 
 	go func() {
 		log.Printf("Server is running: http://%s", cfg.HTTPServer.Address)
-
-		log.Printf("Health Check HTTP: http://%s/api/health-check-http", cfg.HTTPServer.Address)
+		// Health Checks
+		log.Printf("Health Check HTTP, GET: http://%s/api/health-check-http", cfg.HTTPServer.Address)
+		// Auths
+		log.Printf("Email Register, POST: http://%s/api/auth/register-email", cfg.HTTPServer.Address)
 
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Failed to run server, err: %v", err)

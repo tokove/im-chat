@@ -2,7 +2,7 @@ package response
 
 import "github.com/gin-gonic/gin"
 
-type APIResponse struct {
+type apiResponse struct {
 	Status  int    `json:"status"`
 	Success bool   `json:"success"`
 	Message string `json:"message"`
@@ -10,7 +10,7 @@ type APIResponse struct {
 }
 
 func JSON(c *gin.Context, status int, success bool, message string, data any) {
-	c.JSON(status, APIResponse{
+	c.JSON(status, apiResponse{
 		Status:  status,
 		Success: success,
 		Message: message,
