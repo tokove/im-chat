@@ -2,6 +2,7 @@ package main
 
 import (
 	"backend/internal/config"
+	"backend/internal/db"
 	"backend/internal/router"
 	"context"
 	"log"
@@ -17,6 +18,10 @@ import (
 func main() {
 	// init config 
 	cfg := config.LoadConfig()
+
+	// init db
+	db.InitDB(cfg.DBPath, cfg.DBName)
+	defer db.Close()
 
 	// init server
 	server := &http.Server{
