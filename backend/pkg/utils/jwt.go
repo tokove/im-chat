@@ -17,7 +17,7 @@ func InitJWTKey(key string) {
 type CustomClaims struct {
 	UserID   int64  `json:"user_id"`
 	Name     string `json:"name"`
-	Platform string `json:"X-platform"`
+	Platform string `json:"X-Platform"`
 	jwt.RegisteredClaims
 }
 

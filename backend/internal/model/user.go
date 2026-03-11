@@ -2,7 +2,9 @@ package model
 
 import (
 	"backend/internal/db"
+	"backend/internal/middleware"
 	"database/sql"
+	"errors"
 	"time"
 )
 
@@ -22,7 +24,7 @@ func GetUserByEmail(email string) (*User, error) {
 	u := &User{}
 
 	row := db.DB.QueryRow(
-		`SELECT id, name, email, refresh_token_web, refresh_token_web_at, refresh_token_mobile, refresh_token_mobile_at, created_at
+		`SELECT id, name, email, password, refresh_token_web, refresh_token_web_at, refresh_token_mobile, refresh_token_mobile_at, created_at
 		FROM users
 		WHERE email = ?`,
 		email,
@@ -32,6 +34,7 @@ func GetUserByEmail(email string) (*User, error) {
 		&u.ID,
 		&u.Name,
 		&u.Email,
+		&u.Password,
 		&u.RefreshTokenWeb,
 		&u.RefreshTokenWebAt,
 		&u.RefreshTokenMobile,
@@ -49,7 +52,9 @@ func GetUserByEmail(email string) (*User, error) {
 }
 
 func CreateUserByEmail(name, email, password string) (*User, error) {
-	res, err := db.DB.Exec("INSERT INTO users (name, email, password) VALUES (?, ?, ?)", name, email, password)
+	res, err := db.DB.Exec(`
+		INSERT INTO users (name, email, password) 
+		VALUES (?, ?, ?)`, name, email, password)
 	if err != nil {
 		return nil, err
 	}
@@ -58,4 +63,27 @@ func CreateUserByEmail(name, email, password string) (*User, error) {
 	createdAt := time.Now()
 
 	return &User{ID: id, Name: name, Email: email, CreatedAt: createdAt}, nil
+}
+
+func UpdateUserRefreshToken(userID int64, platform, refreshToken string) error {
+	switch platform {
+	case middleware.PlatformWeb:
+		_, err := db.DB.Exec(`
+			UPDATE users
+			SET refresh_token_web = ?, refresh_token_web_at = CURRENT_TIMESTAMP
+			WHERE id = ?
+		`, refreshToken, userID)
+		return err
+
+	case middleware.PlatformMobile:
+		_, err := db.DB.Exec(`
+			UPDATE users
+			SET refresh_token_mobile = ?, refresh_token_mobile_at = CURRENT_TIMESTAMP
+			WHERE id = ?
+		`, refreshToken, userID)
+		return err
+
+	default:
+		return errors.New("Invalid platform")
+	}
 }

@@ -1,10 +1,13 @@
 package router
 
 import (
+	"backend/internal/middleware"
 	"backend/internal/model"
 	"backend/pkg/response"
 	"backend/pkg/utils"
+	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -45,4 +48,62 @@ func handleEmailRegister(c *gin.Context) {
 	}
 
 	response.JSON(c, http.StatusCreated, true, "Signup successful", user)
+}
+
+func handleEmailLogin(c *gin.Context) {
+	platfrom := strings.ToLower(strings.TrimSpace(c.GetHeader(middleware.CtxPlatform)))
+	if platfrom != middleware.PlatformWeb && platfrom != middleware.PlatformMobile {
+		log.Printf("platform: %s", platfrom)
+		response.JSON(c, http.StatusBadRequest, false, "Invalid platform", nil)
+		return
+	}
+
+	var req struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.JSON(c, http.StatusBadRequest, false, "Invalid request params", nil)
+		return
+	}
+
+	existingUser, err := model.GetUserByEmail(req.Email)
+	if err != nil || existingUser == nil {
+		log.Printf("GetUserByEmail error: %v", err)
+		response.JSON(c, http.StatusInternalServerError, false, "login failed, please try again later", nil)
+		return
+	}
+
+	if err := utils.CheckHashedPassword(existingUser.Password, req.Password); err != nil {
+		log.Printf("CheckHashedPassword error: %v", err)
+		response.JSON(c, http.StatusUnauthorized, false, "login failed, please check you email or password", nil)
+		return
+	}
+
+	accessToken, err := utils.GenerateJWT(existingUser.ID, existingUser.Name, platfrom)
+	if err != nil {
+		log.Printf("GenerateJWT error: %v", err)
+		response.JSON(c, http.StatusUnauthorized, false, "login failed, please try again later", nil)
+		return
+	}
+
+	refreshToken, err := utils.GenerateRefreshToken()
+	if err != nil {
+		log.Printf("GenerateRefreshToken error: %v", err)
+		response.JSON(c, http.StatusInternalServerError, false, "login failed, please try again later", nil)
+		return
+	}
+
+	if err := model.UpdateUserRefreshToken(existingUser.ID, platfrom, refreshToken); err != nil {
+		log.Printf("UpdateUserRefreshToken error: %v", err)
+		response.JSON(c, http.StatusInternalServerError, false, "login failed, please try again later", nil)
+		return
+	}
+
+	response.JSON(c, http.StatusOK, true, "login successful", gin.H{
+		"user":          existingUser,
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
+	})
 }

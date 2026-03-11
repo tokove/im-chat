@@ -48,6 +48,8 @@ func main() {
 		log.Printf("Health Check HTTP, GET: http://%s/api/health-check-http", cfg.HTTPServer.Address)
 		// Auths
 		log.Printf("Email Register, POST: http://%s/api/auth/register-email", cfg.HTTPServer.Address)
+		log.Printf("Email Login, POST: http://%s/api/auth/login-email", cfg.HTTPServer.Address)
+
 
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Failed to run server, err: %v", err)

@@ -1,51 +1,39 @@
-### 变量定义 (可根据实际部署修改)
-@host = http://localhost:8080
-@contentType = application/json
+### Health Check
+GET http://localhost:8080/api/health-check-http
+Accept: application/json
 
-### 1. 健康检查 (Health Check)
-# 验证服务是否启动
-GET {{host}}/api/health-check-http
-Content-Type: {{contentType}}
+###
 
-### 2. 用户注册 (Register Email) - 成功场景
-# 测试正常的注册流程
-POST {{host}}/api/auth/register-email
-Content-Type: {{contentType}}
+### Register a new user
+POST http://localhost:8080/api/auth/register-email
+Content-Type: application/json
 
 {
-  "name": "张三",
-  "email": "zhangsan@example.com",
-  "password": "SecurePassword123!"
+  "name": "Test User",
+  "email": "test@example.com",
+  "password": "12345678"
 }
 
-### 3. 用户注册 (Register Email) - 重复邮箱测试
-# 运行完上面的请求后，再次运行此请求应返回 409 Conflict
-POST {{host}}/api/auth/register-email
-Content-Type: {{contentType}}
+###
+
+### Login user (Web platform)
+POST http://localhost:8080/api/auth/login-email
+Content-Type: application/json
+X-Platform: web
 
 {
-  "name": "张三副本",
-  "email": "zhangsan@example.com",
-  "password": "AnotherPassword123!"
+  "email": "test@example.com",
+  "password": "12345678"
 }
 
-### 4. 用户注册 (Register Email) - 参数缺失测试
-# 测试缺少必填字段，应返回 400 Bad Request
-POST {{host}}/api/auth/register-email
-Content-Type: {{contentType}}
+###
+
+### Login user (Mobile platform)
+POST http://localhost:8080/api/auth/login-email
+Content-Type: application/json
+X-Platform: mobile
 
 {
-  "name": "李四",
-  "email": "" 
-}
-
-### 5. 用户注册 (Register Email) - JSON 格式错误测试
-# 测试无效的 JSON 结构，应返回 400 Bad Request
-POST {{host}}/api/auth/register-email
-Content-Type: {{contentType}}
-
-{
-  "name": "王五",
-  "email": "wangwu@example.com"
-  "password": "MissingComma" 
+  "email": "test@example.com",
+  "password": "12345678"
 }

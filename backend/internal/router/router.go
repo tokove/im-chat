@@ -10,6 +10,7 @@ func SetupRouter() *gin.Engine {
 
 	// Auths
 	r.POST("/api/auth/register-email", handleEmailRegister)
+	r.POST("/api/auth/login-email", handleEmailLogin)
 
 	return r
 }
