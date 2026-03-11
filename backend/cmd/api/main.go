@@ -5,6 +5,7 @@ import (
 	"backend/internal/db"
 	"backend/internal/middleware"
 	"backend/internal/router"
+	"backend/pkg/utils"
 	"context"
 	"log"
 	"net/http"
@@ -29,6 +30,9 @@ func main() {
 		Addr:    cfg.HTTPServer.Address,
 		Handler: nil,
 	}
+
+	// init jwtKey
+	utils.InitJWTKey(cfg.JWTKey)
 
 	r := router.SetupRouter()
 	r.Use(middleware.CorsMiddleware())

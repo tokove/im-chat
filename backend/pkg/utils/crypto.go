@@ -13,3 +13,5 @@ func HashPassword(password string) (string, error) {
 func CheckHashedPassword(hash, password string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 }
+
+// crypto 用 []byte 而不是 string
