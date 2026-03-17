@@ -49,6 +49,10 @@ func main() {
 		log.Printf("Email Register, POST: http://%s/api/auth/register-email", cfg.HTTPServer.Address)
 		log.Printf("Email Login, POST: http://%s/api/auth/login-email", cfg.HTTPServer.Address)
 		log.Printf("Logout, POST: http://%s/api/auth/logout", cfg.HTTPServer.Address)
+		log.Printf("Refresh Session, POST: http://%s/api/auth/refresh-session", cfg.HTTPServer.Address)
+		log.Printf("Get Current User, POST: http://%s/api/auth/current-user", cfg.HTTPServer.Address)
+		// Users
+		log.Printf("GetUserByID, POST: http://%s/api/users/:id", cfg.HTTPServer.Address)
 
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Failed to run server, err: %v", err)

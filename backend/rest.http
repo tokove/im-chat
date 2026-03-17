@@ -12,16 +12,6 @@ Content-Type: application/json
   "password": "12345678"
 }
 
-### Login user (Web platform)
-POST http://localhost:8080/api/auth/login-email
-Content-Type: application/json
-X-Platform: web
-
-{
-  "email": "test@example.com",
-  "password": "12345678"
-}
-
 ### Login user (Mobile platform)
 POST http://localhost:8080/api/auth/login-email
 Content-Type: application/json
@@ -32,24 +22,10 @@ X-Platform: mobile
   "password": "12345678"
 }
 
-### Logout (Web platform)
-POST http://localhost:8080/api/auth/logout
-Authorization: Bearer <AccessToken>
-X-Platform: web
-
 ### Logout (Mobile platform)
 POST http://localhost:8080/api/auth/logout
 Authorization: Bearer <AccessToken>
 X-Platform: mobile
-
-### Refresh session (Web)
-POST http://localhost:8080/api/auth/refresh-session
-Content-Type: application/json
-X-Platform: web
-
-{
-  "refresh_token": "s-VmFoCQQ_DYDiv_P4nGdyMb2J3peqpv4w3Lg5vueSE="
-}
 
 ### Refresh session (Mobile)
 POST http://localhost:8080/api/auth/refresh-session
@@ -57,5 +33,21 @@ Content-Type: application/json
 X-Platform: mobile
 
 {
-  "refresh_token": "Hzg3d3pMMA0PRS3CvILd30FE_Oon0dfoFGo3VNc_fcw="
+  "refresh_token": "refresh_token"
 }
+
+### Get Current User
+GET http://localhost:8080/api/auth/current-user
+Content-Type: application/json
+Authorization: Bearer <AccessToken>
+X-Platform: mobile
+
+{
+  "refresh_token": "refresh_token"
+}
+
+### Get User By ID
+GET http://localhost:8080/api/users/1
+Content-Type: application/json
+Authorization: Bearer <AccessToken>
+X-Platform: mobile

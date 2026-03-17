@@ -19,6 +19,7 @@ func SetupRouter() *gin.Engine {
 		public.POST("/auth/register-email", handleEmailRegister)
 		public.POST("/auth/login-email", handleEmailLogin)
 		public.POST("/auth/refresh-session", handleRefreshSession)
+
 	}
 
 	protected := r.Group("/api")
@@ -26,6 +27,10 @@ func SetupRouter() *gin.Engine {
 	{
 		// Auths
 		protected.POST("/auth/logout", handleLogout)
+		protected.GET("/auth/current-user", handleGetCurrentUser)
+
+		// Users
+		protected.GET("/users/:id", handleGetUserByID)
 	}
 
 	return r

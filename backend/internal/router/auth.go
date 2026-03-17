@@ -205,3 +205,38 @@ func handleRefreshSession(c *gin.Context) {
 		"refresh_token": refreshToken,
 	})
 }
+
+func handleGetCurrentUser(c *gin.Context) {
+	platform := strings.ToLower(strings.TrimSpace(c.GetHeader(middleware.CtxPlatform)))
+	if platform != middleware.PlatformWeb && platform != middleware.PlatformMobile {
+		log.Printf("platform: %s", platform)
+		response.JSON(c, http.StatusBadRequest, false, "Invalid platform", nil)
+		return
+	}
+
+	var req struct {
+		RefreshToken string `json:"refresh_token"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.JSON(c, http.StatusBadRequest, false, "invalid request params", nil)
+		return
+	}
+
+	if req.RefreshToken == "" {
+		log.Println("refresh token is empty")
+		response.JSON(c, http.StatusBadRequest, false, "invalid credentials", nil)
+		return
+	}
+
+	existingUser, err := model.GetUserByRefreshToken(req.RefreshToken, platform)
+	if err != nil || existingUser == nil {
+		log.Printf("GetUserByRefreshToken failed, err: %v", err)
+		response.JSON(c, http.StatusInternalServerError, false, "invalid credentials", nil)
+		return
+	}
+
+	response.JSON(c, http.StatusOK, true, "get current user successfully", gin.H{
+		"user": existingUser,
+	})
+}
