@@ -1,16 +1,32 @@
 package router
 
-import "github.com/gin-gonic/gin"
+import (
+	"backend/internal/middleware"
+
+	"github.com/gin-gonic/gin"
+)
 
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
+	r.Use(middleware.CorsMiddleware())
 
-	// Health Checks
-	r.GET("/api/health-check-http", handleHealthCheckHTTP)
+	public := r.Group("/api")
+	{
+		// Health Checks
+		public.GET("/health-check-http", handleHealthCheckHTTP)
 
-	// Auths
-	r.POST("/api/auth/register-email", handleEmailRegister)
-	r.POST("/api/auth/login-email", handleEmailLogin)
+		// Auths
+		public.POST("/auth/register-email", handleEmailRegister)
+		public.POST("/auth/login-email", handleEmailLogin)
+		public.POST("/auth/refresh-session", handleRefreshSession)
+	}
+
+	protected := r.Group("/api")
+	protected.Use(middleware.AuthenticateMiddleware())
+	{
+		// Auths
+		protected.POST("/auth/logout", handleLogout)
+	}
 
 	return r
 }

@@ -2,8 +2,6 @@
 GET http://localhost:8080/api/health-check-http
 Accept: application/json
 
-###
-
 ### Register a new user
 POST http://localhost:8080/api/auth/register-email
 Content-Type: application/json
@@ -13,8 +11,6 @@ Content-Type: application/json
   "email": "test@example.com",
   "password": "12345678"
 }
-
-###
 
 ### Login user (Web platform)
 POST http://localhost:8080/api/auth/login-email
@@ -26,8 +22,6 @@ X-Platform: web
   "password": "12345678"
 }
 
-###
-
 ### Login user (Mobile platform)
 POST http://localhost:8080/api/auth/login-email
 Content-Type: application/json
@@ -36,4 +30,32 @@ X-Platform: mobile
 {
   "email": "test@example.com",
   "password": "12345678"
+}
+
+### Logout (Web platform)
+POST http://localhost:8080/api/auth/logout
+Authorization: Bearer <AccessToken>
+X-Platform: web
+
+### Logout (Mobile platform)
+POST http://localhost:8080/api/auth/logout
+Authorization: Bearer <AccessToken>
+X-Platform: mobile
+
+### Refresh session (Web)
+POST http://localhost:8080/api/auth/refresh-session
+Content-Type: application/json
+X-Platform: web
+
+{
+  "refresh_token": "s-VmFoCQQ_DYDiv_P4nGdyMb2J3peqpv4w3Lg5vueSE="
+}
+
+### Refresh session (Mobile)
+POST http://localhost:8080/api/auth/refresh-session
+Content-Type: application/json
+X-Platform: mobile
+
+{
+  "refresh_token": "Hzg3d3pMMA0PRS3CvILd30FE_Oon0dfoFGo3VNc_fcw="
 }

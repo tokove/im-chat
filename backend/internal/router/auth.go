@@ -68,6 +68,12 @@ func handleEmailLogin(c *gin.Context) {
 		return
 	}
 
+	if req.Email == "" || req.Password == "" {
+		log.Print("email or password is empty")
+		response.JSON(c, http.StatusBadRequest, false, "Invalid credentials", nil)
+		return
+	}
+
 	existingUser, err := model.GetUserByEmail(req.Email)
 	if err != nil || existingUser == nil {
 		log.Printf("GetUserByEmail error: %v", err)
@@ -103,6 +109,98 @@ func handleEmailLogin(c *gin.Context) {
 
 	response.JSON(c, http.StatusOK, true, "login successful", gin.H{
 		"user":          existingUser,
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
+	})
+}
+
+func handleLogout(c *gin.Context) {
+	userIDAny, exist := c.Get(middleware.CtxUserID)
+	if !exist {
+		log.Print("userID not exists")
+		response.JSON(c, http.StatusBadRequest, false, "Unauthorized", nil)
+		return
+	}
+	userID, ok := userIDAny.(int64)
+	if !ok {
+		log.Print("userID type error")
+		response.JSON(c, http.StatusBadRequest, false, "Unauthorized", nil)
+		return
+	}
+
+	platformAny, exist := c.Get(middleware.CtxPlatform)
+	if !exist {
+		log.Print("platform not exists")
+		response.JSON(c, http.StatusBadRequest, false, "Unauthorized", nil)
+		return
+	}
+	platform, ok := platformAny.(string)
+	if !ok {
+		log.Print("platform type error")
+		response.JSON(c, http.StatusBadRequest, false, "Unauthorized", nil)
+		return
+	}
+
+	if err := model.DeleteUserRefreshToken(userID, platform); err != nil {
+		log.Printf("delete token failed, err: %v", err)
+		response.JSON(c, http.StatusInternalServerError, false, "Logout failed", nil)
+		return
+	}
+
+	response.JSON(c, http.StatusOK, true, "Logged out", nil)
+}
+
+func handleRefreshSession(c *gin.Context) {
+	platform := strings.ToLower(strings.TrimSpace(c.GetHeader(middleware.CtxPlatform)))
+	if platform != middleware.PlatformWeb && platform != middleware.PlatformMobile {
+		log.Printf("platform: %s", platform)
+		response.JSON(c, http.StatusBadRequest, false, "Invalid platform", nil)
+		return
+	}
+
+	var req struct {
+		RefreshToken string `json:"refresh_token"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.JSON(c, http.StatusBadRequest, false, "Invalid request params", nil)
+		return
+	}
+
+	if req.RefreshToken == "" {
+		log.Print("refresh token is empty")
+		response.JSON(c, http.StatusBadRequest, false, "Invalid credentials", nil)
+		return
+	}
+
+	existingUser, err := model.GetUserByRefreshToken(req.RefreshToken, platform)
+	if err != nil || existingUser == nil {
+		log.Printf("GetUserByRefreshToken error: %v, user: %v", err, existingUser)
+		response.JSON(c, http.StatusInternalServerError, false, "refresh session failed", nil)
+		return
+	}
+
+	accessToken, err := utils.GenerateJWT(existingUser.ID, existingUser.Name, platform)
+	if err != nil {
+		log.Printf("GenerateJWT error: %v", err)
+		response.JSON(c, http.StatusUnauthorized, false, "refresh session failed", nil)
+		return
+	}
+
+	refreshToken, err := utils.GenerateRefreshToken()
+	if err != nil {
+		log.Printf("GenerateRefreshToken error: %v", err)
+		response.JSON(c, http.StatusInternalServerError, false, "refresh session failed", nil)
+		return
+	}
+
+	if err := model.UpdateUserRefreshToken(existingUser.ID, platform, refreshToken); err != nil {
+		log.Printf("UpdateUserRefreshToken error: %v", err)
+		response.JSON(c, http.StatusInternalServerError, false, "refresh session failed", nil)
+		return
+	}
+
+	response.JSON(c, http.StatusOK, true, "refresh session successful", gin.H{
 		"access_token":  accessToken,
 		"refresh_token": refreshToken,
 	})

@@ -3,7 +3,6 @@ package main
 import (
 	"backend/internal/config"
 	"backend/internal/db"
-	"backend/internal/middleware"
 	"backend/internal/router"
 	"backend/pkg/utils"
 	"context"
@@ -35,7 +34,7 @@ func main() {
 	utils.InitJWTKey(cfg.JWTKey)
 
 	r := router.SetupRouter()
-	r.Use(middleware.CorsMiddleware())
+
 	server.Handler = r
 
 	// shutdown gracefully
@@ -49,7 +48,7 @@ func main() {
 		// Auths
 		log.Printf("Email Register, POST: http://%s/api/auth/register-email", cfg.HTTPServer.Address)
 		log.Printf("Email Login, POST: http://%s/api/auth/login-email", cfg.HTTPServer.Address)
-
+		log.Printf("Logout, POST: http://%s/api/auth/logout", cfg.HTTPServer.Address)
 
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Failed to run server, err: %v", err)
