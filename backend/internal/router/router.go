@@ -31,6 +31,12 @@ func SetupRouter() *gin.Engine {
 
 		// Users
 		protected.GET("/users/:id", handleGetUserByID)
+
+		// Conversations
+		protected.GET("/api/conversations/privates/:private_id", handleGetPrivate)
+		protected.POST("/api/conversations/privates/create", handleCreatePrivate)
+		protected.GET("/api/conversations", handleGetConversations)
+		protected.GET("/api/conversations/privates/:private_id/messages", handleGetPrivateMessages)
 	}
 
 	return r
