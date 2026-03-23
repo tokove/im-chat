@@ -41,7 +41,7 @@ func GetUserByEmail(email string) (*User, error) {
 		&u.RefreshTokenMobileAt,
 		&u.CreatedAt,
 	)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
 	if err != nil {
@@ -146,7 +146,7 @@ func GetUserByRefreshToken(refreshToken, platform string) (*User, error) {
 		&u.RefreshTokenMobileAt,
 		&u.CreatedAt,
 	)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
 	if err != nil {
@@ -177,7 +177,7 @@ func GetUserByID(id int64) (*User, error) {
 		&u.RefreshTokenMobileAt,
 		&u.CreatedAt,
 	)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
 	if err != nil {
