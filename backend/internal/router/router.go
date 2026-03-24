@@ -9,18 +9,17 @@ import (
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 	r.Use(middleware.CorsMiddleware())
-	r.Static("/files", "./files")
 
 	public := r.Group("/api")
 	{
 		// Health Checks
 		public.GET("/health-check-http", handleHealthCheckHTTP)
+		public.GET("/health-check-ws", handleHealthCheckWs)
 
 		// Auths
 		public.POST("/auth/register-email", handleEmailRegister)
 		public.POST("/auth/login-email", handleEmailLogin)
 		public.POST("/auth/refresh-session", handleRefreshSession)
-
 	}
 
 	protected := r.Group("/api")
@@ -41,6 +40,7 @@ func SetupRouter() *gin.Engine {
 
 		// Files
 		protected.POST("/files/:private_id", handleFileUpload)
+		protected.GET("/files/*filepath", gin.WrapH(handleGetFile()))
 	}
 
 	return r

@@ -7,6 +7,8 @@ require (
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 )
 
+require github.com/gorilla/websocket v1.5.3
+
 require (
 	github.com/BurntSushi/toml v1.2.1 // indirect
 	github.com/bytedance/gopkg v0.1.3 // indirect

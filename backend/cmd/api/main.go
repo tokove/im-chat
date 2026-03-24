@@ -45,6 +45,7 @@ func main() {
 		log.Printf("Server is running: http://%s", cfg.HTTPServer.Address)
 		// Health Checks
 		log.Printf("Health Check HTTP, GET: http://%s/api/health-check-http", cfg.HTTPServer.Address)
+		log.Printf("Health Check Websocket, GET: ws://%s/api/health-check-ws", cfg.HTTPServer.Address)
 		// Auths
 		log.Printf("Email Register, POST: http://%s/api/auth/register-email", cfg.HTTPServer.Address)
 		log.Printf("Email Login, POST: http://%s/api/auth/login-email", cfg.HTTPServer.Address)
@@ -53,6 +54,11 @@ func main() {
 		log.Printf("Get Current User, POST: http://%s/api/auth/current-user", cfg.HTTPServer.Address)
 		// Users
 		log.Printf("GetUserByID, POST: http://%s/api/users/:id", cfg.HTTPServer.Address)
+		// Conversations
+		log.Printf("GET Conversation, GET: http://%s/api/conversations/privates/:private_id", server.Addr)
+		log.Printf("Create Conversation, POST: http://%s/api/conversations/privates/create", server.Addr)
+		log.Printf("GET All Conversations: http://%s/api/conversations", server.Addr)
+		log.Printf("GET Conversation Messages (paginated): http://%s/api/conversations/privates/:private_id/messages?page=1&limit=20", server.Addr)
 
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Failed to run server, err: %v", err)

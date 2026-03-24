@@ -91,3 +91,8 @@ func handleFileUpload(c *gin.Context) {
 	fileUrl := fmt.Sprintf("/files/chats/%d/%d/%s", privateID, senderID, uniqueFileName)
 	response.JSON(c, http.StatusOK, true, "success", fileUrl)
 }
+
+func handleGetFile() http.Handler {
+	fs := http.FileServer(http.Dir("./files"))
+	return http.StripPrefix("/api/files", fs)
+}
