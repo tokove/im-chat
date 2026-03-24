@@ -9,6 +9,7 @@ import (
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 	r.Use(middleware.CorsMiddleware())
+	r.Static("/files", "./files") 
 
 	public := r.Group("/api")
 	{
@@ -37,6 +38,9 @@ func SetupRouter() *gin.Engine {
 		protected.POST("/api/conversations/privates/create", handleCreatePrivate)
 		protected.GET("/api/conversations", handleGetConversations)
 		protected.GET("/api/conversations/privates/:private_id/messages", handleGetPrivateMessages)
+
+		// Files
+		protected.POST("/api/files/:private_id", handleFileUpload)
 	}
 
 	return r
