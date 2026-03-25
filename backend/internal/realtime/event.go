@@ -20,5 +20,5 @@ const (
 
 type Event struct {
 	EventType EventType `json:"event_type"`
-	Payload   string    `json:"payload"`
+	Payload   any       `json:"payload"`
 }
