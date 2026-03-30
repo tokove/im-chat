@@ -2,11 +2,12 @@ package router
 
 import (
 	"backend/internal/middleware"
+	"backend/internal/realtime"
 
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRouter() *gin.Engine {
+func SetupRouter(hub *realtime.Hub) *gin.Engine {
 	r := gin.Default()
 	r.Use(middleware.CorsMiddleware())
 
@@ -20,6 +21,9 @@ func SetupRouter() *gin.Engine {
 		public.POST("/auth/register-email", handleEmailRegister)
 		public.POST("/auth/login-email", handleEmailLogin)
 		public.POST("/auth/refresh-session", handleRefreshSession)
+
+		// WebSocket
+		public.GET("/websocket", func(c *gin.Context) { handleWebSocket(hub, c) })
 	}
 
 	protected := r.Group("/api")
@@ -27,7 +31,7 @@ func SetupRouter() *gin.Engine {
 	{
 		// Auths
 		protected.POST("/auth/logout", handleLogout)
-		protected.GET("/auth/current-user", handleGetCurrentUser)
+		protected.POST("/auth/current-user", handleGetCurrentUser)
 
 		// Users
 		protected.GET("/users/:id", handleGetUserByID)

@@ -3,6 +3,7 @@ package main
 import (
 	"backend/internal/config"
 	"backend/internal/db"
+	"backend/internal/realtime"
 	"backend/internal/router"
 	"backend/pkg/utils"
 	"context"
@@ -23,23 +24,19 @@ func main() {
 	// init db
 	db.InitDB(cfg.DBPath, cfg.DBName)
 	defer db.Close()
+	
+	// new hub
+	hub := realtime.NewHub()
 
 	// init server
+	r := router.SetupRouter(hub)
 	server := &http.Server{
 		Addr:    cfg.HTTPServer.Address,
-		Handler: nil,
+		Handler: r,
 	}
 
 	// init jwtKey
 	utils.InitJWTKey(cfg.JWTKey)
-
-	r := router.SetupRouter()
-
-	server.Handler = r
-
-	// shutdown gracefully
-	shutdownCh := make(chan os.Signal, 1)
-	signal.Notify(shutdownCh, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
 		log.Printf("Server is running: http://%s", cfg.HTTPServer.Address)
@@ -65,6 +62,10 @@ func main() {
 		}
 	}()
 
+	// shutdown gracefully
+	shutdownCh := make(chan os.Signal, 1)
+	signal.Notify(shutdownCh, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
 	sig := <-shutdownCh
 	log.Printf("Received shutdown signal: %v", sig)
 
@@ -74,6 +75,11 @@ func main() {
 	if err := server.Shutdown(ctx); err != nil {
 		log.Printf("Server shutdown failed, err: %v", err)
 	}
+
+	hub.Shutdown()
+
+	signal.Stop(shutdownCh) // 通知所有信号停止向chan发送信号
+	close(shutdownCh)
 
 	log.Println("Server shutdown successfully")
 }

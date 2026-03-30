@@ -6,6 +6,7 @@ import (
 	"log"
 	"sync"
 
+	"github.com/coder/websocket"
 	"github.com/gin-gonic/gin"
 )
 
@@ -132,7 +133,7 @@ func (h *Hub) UnregisterClientConnection(client *Client) {
 	}
 	h.mtx.Unlock()
 
-	if err := client.Conn.Close(); err != nil {
+	if err := client.Conn.Close(websocket.StatusNormalClosure, "Closing connection"); err != nil {
 		fmt.Printf("UnregisterClientConnection: client.Conn.Close(), err: %v", err)
 		return
 	}
@@ -201,7 +202,7 @@ func (h *Hub) Shutdown() {
 				EventType: EventServerShutdown,
 				Payload:   "Server is shutting down",
 			})
-			c.Conn.Close()
+			c.Conn.Close(websocket.StatusNormalClosure, "Closing connection")
 		}
 	}
 

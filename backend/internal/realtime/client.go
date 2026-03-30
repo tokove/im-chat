@@ -4,7 +4,7 @@ import (
 	"backend/internal/model"
 	"sync"
 
-	"github.com/gorilla/websocket"
+	"github.com/coder/websocket"
 )
 
 type Client struct {
@@ -32,7 +32,7 @@ func (c *Client) SendEvent(event Event) {
 func (c *Client) Close() {
 	c.once.Do(func() {
 		if c.Conn != nil {
-			_ = c.Conn.Close()
+			_ = c.Conn.Close(websocket.StatusNormalClosure, "Closing connection")
 		}
 		close(c.Send)
 	})

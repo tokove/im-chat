@@ -2,11 +2,11 @@ package router
 
 import (
 	"backend/pkg/response"
-	"log"
 	"net/http"
 
+	"github.com/coder/websocket"
+	"github.com/coder/websocket/wsjson"
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 )
 
 func handleHealthCheckHTTP(c *gin.Context) {
@@ -14,39 +14,32 @@ func handleHealthCheckHTTP(c *gin.Context) {
 }
 
 func handleHealthCheckWs(c *gin.Context) {
-	// http -> websocket
-	upgrader := websocket.Upgrader{
-		CheckOrigin: func(r *http.Request) bool {
-			return true
-		},
+	// build conn
+	w, r := c.Writer, c.Request
+	opts := &websocket.AcceptOptions{
+		OriginPatterns: []string{"*"},
 	}
 
-	// build conn
-	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	conn, err := websocket.Accept(w, r, opts)
 	if err != nil {
 		return
 	}
-	defer conn.Close()
+	defer conn.Close(websocket.StatusNormalClosure, "Connection closed")
 
+	ctx := r.Context()
 	for {
-		// read message
-		_, message, err := conn.ReadMessage()
-		if err != nil {
-			log.Printf("conn.ReadMessage failed, err: %v", err)
+		var message string
+		if err := wsjson.Read(ctx, conn, &message); err != nil {
 			break
 		}
 
 		response := map[string]any{
-			"data":    string(message),
+			"data":    message,
 			"from":    "server",
 			"success": true,
 		}
 
-		log.Println("WS message received:", string(message))
-
-		// write message
-		if err := conn.WriteJSON(response); err != nil {
-			log.Printf("conn.WriteJSON failed, err: %v", err)
+		if err = wsjson.Write(ctx, conn, response); err != nil {
 			break
 		}
 	}
