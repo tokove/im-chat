@@ -57,13 +57,20 @@ func (h *Hub) SendEventToUserIDs(userIDs []int64, senderID int64, eventType Even
 	for _, id := range userIDs {
 		h.mtx.RLock()
 		conns, ok := h.Clients[id]
+		var clients []*Client
+		if ok {
+			clients = make([]*Client, 0, len(conns))
+			for c := range conns {
+				clients = append(clients, c)
+			}
+		}
 		h.mtx.RUnlock()
 
 		if !ok {
 			continue
 		}
 
-		for c := range conns {
+		for _, c := range clients {
 			c.SendEvent(Event{
 				EventType: eventType,
 				Payload:   payload,
@@ -133,11 +140,6 @@ func (h *Hub) UnregisterClientConnection(client *Client) {
 	}
 	h.mtx.Unlock()
 
-	if err := client.Conn.Close(websocket.StatusNormalClosure, "Closing connection"); err != nil {
-		fmt.Printf("UnregisterClientConnection: client.Conn.Close(), err: %v", err)
-		return
-	}
-
 	if noConnectionLeft {
 		h.broadcastToAll(Event{
 			EventType: EventUserOffline,
@@ -170,10 +172,10 @@ func (h *Hub) SendCurrentClients(toClient *Client) {
 
 	h.mtx.RUnlock()
 
-	toClient.Send <- Event{
+	toClient.SendEvent(Event{
 		EventType: EventCurrentUsers,
 		Payload:   users,
-	}
+	})
 }
 
 func (h *Hub) SendError(clientID int64, message string) {

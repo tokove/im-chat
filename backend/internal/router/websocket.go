@@ -66,12 +66,12 @@ func handleWebSocket(hub *realtime.Hub, c *gin.Context) {
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 
-	go heartbeat(ctx, client)
+	go heartbeat(ctx, cancel, client)
 	go writePump(ctx, client)
 	readPump(ctx, cancel, hub, client)
 }
 
-func heartbeat(ctx context.Context, client *realtime.Client) {
+func heartbeat(ctx context.Context, cancel context.CancelFunc, client *realtime.Client) {
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
 
@@ -80,13 +80,14 @@ func heartbeat(ctx context.Context, client *realtime.Client) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			pingCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+			pingCtx, pingCancel := context.WithTimeout(ctx, 5*time.Second)
 			if err := client.Conn.Ping(pingCtx); err != nil {
 				log.Println("ping failed, disconnecting client")
+				pingCancel()
 				cancel()
 				return
 			}
-			cancel()
+			pingCancel()
 
 			client.Send <- realtime.Event{
 				EventType: realtime.EventHeartbeat,
@@ -141,7 +142,7 @@ func readPump(ctx context.Context, cancel context.CancelFunc, hub *realtime.Hub,
 func handleEventMessage(payload map[string]any, hub *realtime.Hub, client *realtime.Client) {
 	privateIdAny, ok := payload["private_id"]
 	if !ok {
-		hub.SendError(client.User.ID, "private id is mising")
+		hub.SendError(client.User.ID, "private id is missing")
 		return
 	}
 	privateIdFloat, ok := privateIdAny.(float64)
@@ -153,7 +154,7 @@ func handleEventMessage(payload map[string]any, hub *realtime.Hub, client *realt
 
 	receiverIdAny, ok := payload["receiver_id"]
 	if !ok {
-		hub.SendError(client.User.ID, "receiver id is mising")
+		hub.SendError(client.User.ID, "receiver id is missing")
 		return
 	}
 	receiverIdFloat, ok := receiverIdAny.(float64)

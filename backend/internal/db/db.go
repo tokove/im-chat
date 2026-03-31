@@ -112,6 +112,6 @@ func Close() {
 		return
 	}
 	if err := DB.Close(); err != nil {
-		log.Println("DB closed")
+		log.Printf("Failed to close DB: %v", err)
 	}
 }

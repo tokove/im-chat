@@ -15,13 +15,13 @@ func handleGetUserByID(c *gin.Context) {
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		log.Println("id parse failed from string")
-		response.JSON(c, http.StatusBadRequest, false, "invalid credentils", nil)
+		response.JSON(c, http.StatusBadRequest, false, "invalid credentials", nil)
 		return
 	}
 
 	existingUser, err := model.GetUserByID(id)
 	if err != nil || existingUser == nil {
-		response.JSON(c, http.StatusInternalServerError, false, "invalid credentils", nil)
+		response.JSON(c, http.StatusInternalServerError, false, "invalid credentials", nil)
 		return
 	}
 

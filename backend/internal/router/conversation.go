@@ -74,9 +74,11 @@ func handleCreatePrivate(c *gin.Context) {
 			response.JSON(c, http.StatusInternalServerError, false, "failed to create private", nil)
 			return
 		}
+		response.JSON(c, http.StatusCreated, true, "success", private)
+		return
 	}
 
-	response.JSON(c, http.StatusCreated, true, "success", private)
+	response.JSON(c, http.StatusOK, true, "success", private)
 }
 
 func handleGetConversations(c *gin.Context) {
