@@ -24,7 +24,7 @@ func main() {
 	// init db
 	db.InitDB(cfg.DBPath, cfg.DBName)
 	defer db.Close()
-	
+
 	// new hub
 	hub := realtime.NewHub()
 
@@ -41,21 +41,23 @@ func main() {
 	go func() {
 		log.Printf("Server is running: http://%s", cfg.HTTPServer.Address)
 		// Health Checks
-		log.Printf("Health Check HTTP, GET: http://%s/api/health-check-http", cfg.HTTPServer.Address)
-		log.Printf("Health Check Websocket, GET: ws://%s/api/health-check-ws", cfg.HTTPServer.Address)
+		log.Printf("Health Check HTTP, GET: http://%s/api/health-check-http", server.Addr)
+		log.Printf("Health Check Websocket, GET: ws://%s/api/health-check-ws", server.Addr)
 		// Auths
-		log.Printf("Email Register, POST: http://%s/api/auth/register-email", cfg.HTTPServer.Address)
-		log.Printf("Email Login, POST: http://%s/api/auth/login-email", cfg.HTTPServer.Address)
-		log.Printf("Logout, POST: http://%s/api/auth/logout", cfg.HTTPServer.Address)
-		log.Printf("Refresh Session, POST: http://%s/api/auth/refresh-session", cfg.HTTPServer.Address)
-		log.Printf("Get Current User, POST: http://%s/api/auth/current-user", cfg.HTTPServer.Address)
+		log.Printf("Email Register, POST: http://%s/api/auth/register-email", server.Addr)
+		log.Printf("Email Login, POST: http://%s/api/auth/login-email", server.Addr)
+		log.Printf("Logout, POST: http://%s/api/auth/logout", server.Addr)
+		log.Printf("Refresh Session, POST: http://%s/api/auth/refresh-session", server.Addr)
+		log.Printf("Get Current User, POST: http://%s/api/auth/current-user", server.Addr)
 		// Users
-		log.Printf("GetUserByID, POST: http://%s/api/users/:id", cfg.HTTPServer.Address)
+		log.Printf("GetUserByID, POST: http://%s/api/users/:id", server.Addr)
 		// Conversations
 		log.Printf("GET Conversation, GET: http://%s/api/conversations/privates/:private_id", server.Addr)
 		log.Printf("Create Conversation, POST: http://%s/api/conversations/privates/create", server.Addr)
 		log.Printf("GET All Conversations: http://%s/api/conversations", server.Addr)
 		log.Printf("GET Conversation Messages (paginated): http://%s/api/conversations/privates/:private_id/messages?page=1&limit=20", server.Addr)
+		// WebSocket
+		log.Printf("Websocket connection, GET: ws://%s/api/ws", server.Addr)
 
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Failed to run server, err: %v", err)

@@ -51,9 +51,9 @@ func handleEmailRegister(c *gin.Context) {
 }
 
 func handleEmailLogin(c *gin.Context) {
-	platfrom := strings.ToLower(strings.TrimSpace(c.GetHeader(middleware.CtxPlatform)))
-	if platfrom != middleware.PlatformWeb && platfrom != middleware.PlatformMobile {
-		log.Printf("platform: %s", platfrom)
+	platform := strings.ToLower(strings.TrimSpace(c.GetHeader(middleware.CtxPlatform)))
+	if platform != middleware.PlatformWeb && platform != middleware.PlatformMobile {
+		log.Printf("platform: %s", platform)
 		response.JSON(c, http.StatusBadRequest, false, "Invalid platform", nil)
 		return
 	}
@@ -87,7 +87,7 @@ func handleEmailLogin(c *gin.Context) {
 		return
 	}
 
-	accessToken, err := utils.GenerateJWT(existingUser.ID, existingUser.Name, platfrom)
+	accessToken, err := utils.GenerateJWT(existingUser.ID, existingUser.Name, platform)
 	if err != nil {
 		log.Printf("GenerateJWT error: %v", err)
 		response.JSON(c, http.StatusUnauthorized, false, "login failed, please try again later", nil)
@@ -101,7 +101,7 @@ func handleEmailLogin(c *gin.Context) {
 		return
 	}
 
-	if err := model.UpdateUserRefreshToken(existingUser.ID, platfrom, refreshToken); err != nil {
+	if err := model.UpdateUserRefreshToken(existingUser.ID, platform, refreshToken); err != nil {
 		log.Printf("UpdateUserRefreshToken error: %v", err)
 		response.JSON(c, http.StatusInternalServerError, false, "login failed, please try again later", nil)
 		return

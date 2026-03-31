@@ -139,29 +139,29 @@ func readPump(ctx context.Context, cancel context.CancelFunc, hub *realtime.Hub,
 }
 
 func handleEventMessage(payload map[string]any, hub *realtime.Hub, client *realtime.Client) {
-	privateIdAny, ok := payload["private_id"]
+	privateIDAny, ok := payload["private_id"]
 	if !ok {
-		hub.SendError(client.User.ID, "private id is mising")
+		hub.SendError(client.User.ID, "private id is missing")
 		return
 	}
-	privateIdFloat, ok := privateIdAny.(float64)
+	privateIDFloat, ok := privateIDAny.(float64)
 	if !ok {
 		hub.SendError(client.User.ID, "private id must be a number")
 		return
 	}
-	privateId := int64(privateIdFloat)
+	privateID := int64(privateIDFloat)
 
-	receiverIdAny, ok := payload["receiver_id"]
+	receiverIDAny, ok := payload["receiver_id"]
 	if !ok {
-		hub.SendError(client.User.ID, "receiver id is mising")
+		hub.SendError(client.User.ID, "receiver id is missing")
 		return
 	}
-	receiverIdFloat, ok := receiverIdAny.(float64)
+	receiverIDFloat, ok := receiverIDAny.(float64)
 	if !ok {
 		hub.SendError(client.User.ID, "receiver id must be a number")
 		return
 	}
-	receiverId := int64(receiverIdFloat)
+	receiverID := int64(receiverIDFloat)
 
 	messageTypeAny, ok := payload["message_type"]
 	if !ok {
@@ -187,7 +187,7 @@ func handleEventMessage(payload map[string]any, hub *realtime.Hub, client *realt
 
 	msg.ID = 0
 	msg.FromID = client.User.ID
-	msg.PrivateID = privateId
+	msg.PrivateID = privateID
 	msg.MessageType = messageType
 	msg.CreatedAt = time.Now()
 
@@ -196,7 +196,7 @@ func handleEventMessage(payload map[string]any, hub *realtime.Hub, client *realt
 		return
 	}
 
-	hub.SendEventToUserIDs([]int64{msg.FromID, receiverId}, msg.FromID, realtime.EventMessage, map[string]any{
+	hub.SendEventToUserIDs([]int64{msg.FromID, receiverID}, msg.FromID, realtime.EventMessage, map[string]any{
 		"message": msg,
 	})
 }
@@ -273,7 +273,7 @@ func handleIncomingEvent(hub *realtime.Hub, client *realtime.Client, event realt
 		hub.SendEventToUserIDs([]int64{msg.FromID}, client.User.ID, realtime.EventRead, map[string]any{
 			"message_id": msgID,
 		})
-		
+
 	case realtime.EventTyping:
 		privateIDAny, ok := payload["private_id"]
 		if !ok {
@@ -287,12 +287,12 @@ func handleIncomingEvent(hub *realtime.Hub, client *realtime.Client, event realt
 		}
 		privateID := int64(privateIDFloat)
 
-		reciverIDAny, ok := payload["receiver_id"]
+		receiverIDAny, ok := payload["receiver_id"]
 		if !ok {
 			hub.SendError(client.User.ID, "receiver id not exists")
 			return
 		}
-		receiverIDFloat, ok := reciverIDAny.(float64)
+		receiverIDFloat, ok := receiverIDAny.(float64)
 		if !ok {
 			hub.SendError(client.User.ID, "receiver id type is wrong")
 			return

@@ -50,7 +50,7 @@ func ParseJWT(tokenStr string) (int64, string, string, error) {
 		func(t *jwt.Token) (any, error) {
 			_, ok := t.Method.(*jwt.SigningMethodHMAC)
 			if !ok {
-				return nil, fmt.Errorf("unexpeted sign method")
+				return nil, fmt.Errorf("unexpected sign method")
 			}
 
 			return jwtKey, nil

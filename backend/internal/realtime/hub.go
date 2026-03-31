@@ -2,11 +2,9 @@ package realtime
 
 import (
 	"backend/internal/model"
-	"fmt"
 	"log"
 	"sync"
 
-	"github.com/coder/websocket"
 	"github.com/gin-gonic/gin"
 )
 
@@ -53,17 +51,21 @@ func (h *Hub) GetClients(userID int64) ([]*Client, bool) {
 	return clients, true
 }
 
-func (h *Hub) SendEventToUserIDs(userIDs []int64, senderID int64, eventType EventType, payload any) {
+func (h *Hub) SendEventToUserIDs(userIDs []int64, senderID int64, eventType EventType, payload map[string]any) {
 	for _, id := range userIDs {
 		h.mtx.RLock()
 		conns, ok := h.Clients[id]
+		clients := make([]*Client, 0)
+		for c := range conns {
+			clients = append(clients, c)
+		}
 		h.mtx.RUnlock()
 
 		if !ok {
 			continue
 		}
 
-		for c := range conns {
+		for _, c := range clients {
 			c.SendEvent(Event{
 				EventType: eventType,
 				Payload:   payload,
@@ -92,14 +94,14 @@ func (h *Hub) RegisterClientConnection(client *Client) {
 		go func() {
 			privates, err := model.GetPrivatesForUser(client.User.ID)
 			if err != nil {
-				fmt.Printf("RegisterClientConnection: GetPrivatesForUser, err: %v", err)
+				log.Printf("RegisterClientConnection: GetPrivatesForUser, err: %v", err)
 				return
 			}
 
 			for _, p := range privates {
 				msgs, err := model.GetUndeliveredMessagesByPrivateID(p.ID)
 				if err != nil {
-					fmt.Printf("RegisterClientConnection: GetUndeliveredMessagesByPrivateID, err: %v", err)
+					log.Printf("RegisterClientConnection: GetUndeliveredMessagesByPrivateID, err: %v", err)
 					continue
 				}
 
@@ -132,11 +134,6 @@ func (h *Hub) UnregisterClientConnection(client *Client) {
 		delete(h.Clients, client.User.ID)
 	}
 	h.mtx.Unlock()
-
-	if err := client.Conn.Close(websocket.StatusNormalClosure, "Closing connection"); err != nil {
-		fmt.Printf("UnregisterClientConnection: client.Conn.Close(), err: %v", err)
-		return
-	}
 
 	if noConnectionLeft {
 		h.broadcastToAll(Event{
@@ -202,7 +199,7 @@ func (h *Hub) Shutdown() {
 				EventType: EventServerShutdown,
 				Payload:   "Server is shutting down",
 			})
-			c.Conn.Close(websocket.StatusNormalClosure, "Closing connection")
+			c.Close()
 		}
 	}
 

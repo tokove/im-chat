@@ -23,7 +23,7 @@ func SetupRouter(hub *realtime.Hub) *gin.Engine {
 		public.POST("/auth/refresh-session", handleRefreshSession)
 
 		// WebSocket
-		public.GET("/websocket", func(c *gin.Context) { handleWebSocket(hub, c) })
+		public.GET("/ws", func(c *gin.Context) { handleWebSocket(hub, c) })
 	}
 
 	protected := r.Group("/api")
