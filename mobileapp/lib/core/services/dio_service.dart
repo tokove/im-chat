@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/consts/base_url.dart';
@@ -20,7 +21,10 @@ class DioService {
     dio = Dio(
       BaseOptions(
         baseUrl: baseUrlHTTP,
-        headers: {'Content-Type': 'application/json', 'X-Platform': 'mobile'},
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Platform': kIsWeb ? 'web' : 'mobile',
+        },
       ),
     );
 
