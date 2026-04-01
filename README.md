@@ -10,6 +10,7 @@
 - [技术栈](#技术栈)
 - [架构概览](#架构概览)
 - [快速开始](#快速开始)
+- [Flutter 前端](#flutter-前端)
 - [环境变量](#环境变量)
 - [项目结构](#项目结构)
 - [API 文档](#api-文档)
@@ -91,16 +92,6 @@ cd im-chat/backend
 # 下载依赖
 go mod download
 
-# 创建配置文件目录及示例配置（可选）
-mkdir -p config
-cat > config/dev.env <<EOF
-ENV=dev
-DB_PATH=sqlite/dev
-DB_NAME=api.db
-HTTP_ADDRESS=localhost:8080
-JWT_KEY=your-secret-jwt-key
-EOF
-
 # 启动服务
 go run ./cmd/api/ -config ./config/dev.env
 ```
@@ -117,6 +108,42 @@ Health Check Websocket, GET: ws://localhost:8080/api/health-check-ws
 ### 使用 rest.http 测试
 
 项目根目录提供了 [`rest.http`](./backend/rest.http) 文件，可在支持 HTTP Client 的编辑器（如 VS Code REST Client 插件）中直接执行接口测试。
+
+---
+
+## Flutter 前端
+
+Flutter 前端位于 `mobileapp/` 目录，支持 Android、iOS、macOS、Linux、Windows 及 **Web** 平台。
+
+### 前置条件
+
+- Flutter SDK（包含 Dart）
+- 后端服务已启动（参见[快速开始](#快速开始)）
+
+### 安装依赖
+
+```bash
+cd im-chat/mobileapp
+flutter pub get
+```
+
+### 在浏览器中运行（推荐用于多用户测试）
+
+```bash
+flutter run -d web-server --web-hostname 0.0.0.0 --web-port 3000
+```
+
+服务启动后，在浏览器中打开 `http://localhost:3000`。打开多个浏览器窗口，分别注册或登录不同账号，即可实时体验双向聊天。
+
+### 在移动设备或桌面上运行
+
+```bash
+# 列出可用设备
+flutter devices
+
+# 在指定设备上运行
+flutter run -d <device-id>
+```
 
 ---
 
