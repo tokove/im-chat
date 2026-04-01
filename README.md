@@ -1,6 +1,6 @@
 # im-chat · 即时通讯聊天系统
 
-基于 **Go + WebSocket** 构建的轻量级即时通讯后端服务，支持私聊、实时消息收发、文件分享、用户在线状态感知及消息送达/已读回执。
+基于 **Go + WebSocket** 构建的轻量级即时通讯系统，包含后端服务与 Flutter 跨平台移动客户端，支持私聊、实时消息收发、文件分享、用户在线状态感知及消息送达/已读回执。
 
 ---
 
@@ -10,6 +10,8 @@
 - [技术栈](#技术栈)
 - [架构概览](#架构概览)
 - [快速开始](#快速开始)
+  - [后端启动](#后端启动)
+  - [移动端启动](#移动端启动)
 - [环境变量](#环境变量)
 - [项目结构](#项目结构)
 - [API 文档](#api-文档)
@@ -36,6 +38,8 @@
 
 ## 技术栈
 
+### 后端
+
 | 分类 | 技术 |
 |------|------|
 | 语言 | Go 1.25 |
@@ -45,6 +49,18 @@
 | 认证 | JWT ([golang-jwt/jwt](https://github.com/golang-jwt/jwt)) + bcrypt |
 | 唯一 ID | [google/uuid](https://github.com/google/uuid) |
 | 配置 | [cleanenv](https://github.com/ilyakaznacheev/cleanenv) |
+
+### 移动端
+
+| 分类 | 技术 |
+|------|------|
+| 框架 | Flutter ^3.10.4 |
+| 状态管理 | flutter_riverpod ^3.1.0 |
+| HTTP 客户端 | dio ^5.9.0 |
+| WebSocket 客户端 | web_socket_channel ^3.0.3 |
+| 本地存储 | shared_preferences ^2.5.4 |
+| 文件选择 | file_picker ^10.3.8 |
+| 时间格式化 | timeago ^3.7.1 |
 
 ---
 
@@ -76,12 +92,14 @@
 
 ## 快速开始
 
-### 前置条件
+### 后端启动
+
+#### 前置条件
 
 - Go 1.25 或更高版本
 - Git
 
-### 克隆并运行
+#### 克隆并运行
 
 ```bash
 # 克隆仓库
@@ -111,12 +129,79 @@ go run ./cmd/api/ -config ./config/dev.env
 Server is running: http://localhost:8080
 Health Check HTTP, GET: http://localhost:8080/api/health-check-http
 Health Check Websocket, GET: ws://localhost:8080/api/health-check-ws
-...
+Email Register, POST: http://localhost:8080/api/auth/register-email
+Email Login, POST: http://localhost:8080/api/auth/login-email
+Logout, POST: http://localhost:8080/api/auth/logout
+Refresh Session, POST: http://localhost:8080/api/auth/refresh-session
+Get Current User, POST: http://localhost:8080/api/auth/current-user
+GetUserByID, POST: http://localhost:8080/api/users/:id
+GET Conversation, GET: http://localhost:8080/api/conversations/privates/:private_id
+Create Conversation, POST: http://localhost:8080/api/conversations/privates/create
+GET All Conversations: http://localhost:8080/api/conversations
+GET Conversation Messages: http://localhost:8080/api/conversations/privates/:private_id/messages
+Websocket connection, GET: ws://localhost:8080/api/ws
 ```
 
-### 使用 rest.http 测试
+#### 使用 rest.http 测试
 
-项目根目录提供了 [`rest.http`](./backend/rest.http) 文件，可在支持 HTTP Client 的编辑器（如 VS Code REST Client 插件）中直接执行接口测试。
+项目提供了 [`backend/rest.http`](./backend/rest.http) 文件，可在支持 HTTP Client 的编辑器（如 VS Code REST Client 插件）中直接执行接口测试。
+
+---
+
+### 移动端启动
+
+#### 前置条件
+
+- [Flutter SDK](https://docs.flutter.dev/get-started/install) 3.10.4 或更高版本
+- Android Studio 或 Xcode（按目标平台安装）
+- 已运行的后端服务（默认 `localhost:8080`）
+
+#### 配置后端地址
+
+编辑 `mobileapp/lib/core/consts/base_url.dart`，将 URL 改为实际后端地址：
+
+```dart
+// 本机开发（iOS 模拟器 / Flutter Web）
+const String baseUrlHTTP = 'http://localhost:8080/api';
+const String baseUrlWs   = 'ws://localhost:8080/api/ws';
+
+// Android 模拟器（10.0.2.2 指向宿主机 localhost）
+// const String baseUrlHTTP = 'http://10.0.2.2:8080/api';
+// const String baseUrlWs   = 'ws://10.0.2.2:8080/api/ws';
+
+// 真机或远程服务器
+// const String baseUrlHTTP = 'http://<服务器IP>:8080/api';
+// const String baseUrlWs   = 'ws://<服务器IP>:8080/api/ws';
+```
+
+#### 安装依赖并运行
+
+```bash
+cd im-chat/mobileapp
+
+# 安装依赖
+flutter pub get
+
+# 查看已连接设备
+flutter devices
+
+# 在指定设备或模拟器上运行
+flutter run
+
+# 或指定平台
+flutter run -d android   # Android
+flutter run -d ios       # iOS（需要 macOS + Xcode）
+flutter run -d web       # Web 浏览器
+```
+
+#### 构建生产包
+
+```bash
+flutter build apk          # Android APK
+flutter build appbundle    # Android AAB（推荐上架）
+flutter build ios          # iOS（需要 macOS + Xcode）
+flutter build web          # Web 静态文件
+```
 
 ---
 
@@ -136,45 +221,65 @@ Health Check Websocket, GET: ws://localhost:8080/api/health-check-ws
 ## 项目结构
 
 ```
-backend/
-├── cmd/
-│   └── api/
-│       └── main.go              # 应用入口：依赖注入、优雅关闭
-├── config/
-│   └── dev.env                  # 本地开发配置文件（不提交到版本控制）
-├── internal/
+im-chat/
+├── backend/                       # Go 后端服务
+│   ├── cmd/
+│   │   └── api/
+│   │       └── main.go            # 应用入口：依赖注入、优雅关闭
 │   ├── config/
-│   │   └── config.go            # 配置加载（cleanenv）
-│   ├── db/
-│   │   └── db.go                # 数据库初始化、建表、索引
-│   ├── middleware/
-│   │   ├── authenticate.go      # JWT 认证中间件
-│   │   └── cors.go              # CORS 中间件
-│   ├── model/
-│   │   ├── user.go              # 用户数据模型 & 数据库操作
-│   │   ├── message.go           # 消息模型 & CRUD
-│   │   └── private.go           # 私聊会话模型 & 查询
-│   ├── realtime/
-│   │   ├── hub.go               # WebSocket 连接管理器（Hub）
-│   │   ├── client.go            # 单个 WebSocket 连接（Client）
-│   │   └── event.go             # 事件类型定义
-│   └── router/
-│       ├── router.go            # 路由注册
-│       ├── auth.go              # 认证相关接口
-│       ├── conversation.go      # 会话相关接口
-│       ├── websocket.go         # WebSocket 升级处理
-│       ├── file.go              # 文件上传/下载
-│       ├── user.go              # 用户相关接口
-│       └── health.go            # 健康检查接口
-├── pkg/
-│   ├── response/
-│   │   └── response.go          # 统一 JSON 响应格式
-│   └── utils/
-│       ├── jwt.go               # JWT 生成与解析
-│       └── crypto.go            # 密码哈希工具
-├── go.mod
-├── go.sum
-└── rest.http                    # HTTP 接口测试文件
+│   │   └── dev.env                # 本地开发配置文件（不提交到版本控制）
+│   ├── internal/
+│   │   ├── config/
+│   │   │   └── config.go          # 配置加载（cleanenv）
+│   │   ├── db/
+│   │   │   └── db.go              # 数据库初始化、建表、索引
+│   │   ├── middleware/
+│   │   │   ├── authenticate.go    # JWT 认证中间件
+│   │   │   └── cors.go            # CORS 中间件
+│   │   ├── model/
+│   │   │   ├── user.go            # 用户数据模型 & 数据库操作
+│   │   │   ├── message.go         # 消息模型 & CRUD
+│   │   │   └── private.go         # 私聊会话模型 & 查询
+│   │   ├── realtime/
+│   │   │   ├── hub.go             # WebSocket 连接管理器（Hub）
+│   │   │   ├── client.go          # 单个 WebSocket 连接（Client）
+│   │   │   └── event.go           # 事件类型定义
+│   │   └── router/
+│   │       ├── router.go          # 路由注册
+│   │       ├── auth.go            # 认证相关接口
+│   │       ├── conversation.go    # 会话相关接口
+│   │       ├── websocket.go       # WebSocket 升级处理
+│   │       ├── file.go            # 文件上传/下载
+│   │       ├── user.go            # 用户相关接口
+│   │       └── health.go          # 健康检查接口
+│   ├── pkg/
+│   │   ├── response/
+│   │   │   └── response.go        # 统一 JSON 响应格式
+│   │   └── utils/
+│   │       ├── jwt.go             # JWT 生成与解析
+│   │       └── crypto.go          # 密码哈希工具
+│   ├── go.mod
+│   ├── go.sum
+│   └── rest.http                  # HTTP 接口测试文件
+│
+└── mobileapp/                     # Flutter 跨平台客户端
+    ├── lib/
+    │   ├── main.dart              # 应用入口
+    │   ├── apis/remote/           # 远端 API 接口层
+    │   ├── core/
+    │   │   ├── consts/
+    │   │   │   └── base_url.dart  # 后端地址配置
+    │   │   ├── services/
+    │   │   │   ├── websocket_service.dart   # WebSocket 客户端
+    │   │   │   ├── dio_service.dart         # HTTP 客户端
+    │   │   │   └── secure_storage_service.dart  # Token 安全存储
+    │   │   └── utils/
+    │   │       └── pick_files.dart          # 文件选择工具
+    │   ├── models/                # 数据模型（user / message / private）
+    │   ├── notifiers/             # Riverpod 状态管理
+    │   ├── screens/               # 页面（登录、注册、首页、聊天）
+    │   └── widgets/               # 公共组件
+    └── pubspec.yaml               # Flutter 依赖声明
 ```
 
 ---
