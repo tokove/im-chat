@@ -20,25 +20,30 @@ import (
 
 func handleWebSocket(hub *realtime.Hub, c *gin.Context) {
 	authHeader := c.GetHeader(middleware.CtxAuthorization)
-	if authHeader == "" || !strings.HasPrefix(strings.ToLower(authHeader), "bearer ") {
-		response.JSON(c, http.StatusUnauthorized, false, "unauthorization", nil)
-		return
+	var accessToken string
+
+	if authHeader != "" && strings.HasPrefix(strings.ToLower(authHeader), "bearer ") {
+		accessToken = strings.TrimSpace(authHeader[7:])
+	} else {
+		accessToken = strings.TrimSpace(c.Query("token"))
 	}
 
-	accessToken := strings.TrimSpace(authHeader[7:])
 	if accessToken == "" {
+		log.Println("ws unauthorized: empty access token")
 		response.JSON(c, http.StatusUnauthorized, false, "unauthorization", nil)
 		return
 	}
 
 	userID, _, _, err := utils.ParseJWT(accessToken)
 	if err != nil {
+		log.Println("ws unauthorized: ParseJWT error:", err)
 		response.JSON(c, http.StatusUnauthorized, false, "invalid token", nil)
 		return
 	}
 
 	user, err := model.GetUserByID(userID)
 	if err != nil {
+		log.Println("ws unauthorized: user not found:", err)
 		response.JSON(c, http.StatusUnauthorized, false, "user not found", nil)
 		return
 	}
@@ -47,8 +52,10 @@ func handleWebSocket(hub *realtime.Hub, c *gin.Context) {
 	opts := websocket.AcceptOptions{
 		OriginPatterns: []string{"*"},
 	}
+
 	conn, err := websocket.Accept(w, r, &opts)
 	if err != nil {
+		log.Println("ws accept error:", err)
 		response.JSON(c, http.StatusInternalServerError, false, "failed to upgrade websocket", nil)
 		return
 	}
@@ -70,6 +77,7 @@ func handleWebSocket(hub *realtime.Hub, c *gin.Context) {
 	go writePump(ctx, client)
 	readPump(ctx, cancel, hub, client)
 }
+
 
 func heartbeat(ctx context.Context, client *realtime.Client) {
 	ticker := time.NewTicker(30 * time.Second)
